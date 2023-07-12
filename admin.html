@@ -25,18 +25,18 @@
             <th>Group</th>
         </tr>
     </table>
-    <script type="text/javascript">
+    <!-- <script type="text/javascript">
         document.getElementById("btnAdminLogin").onclick = function () {
             location.href = "/admin";
         };
-    </script>
+    </script> -->
     <script>
         //HTML elements
         let clientId = null;
         let gameId = null;
         let playerColor = null;
         // let ws = new WebSocket("ws://localhost:9090")
-        let ws = new WebSocket("https://legotournament.onrender.com/")
+        let ws = new WebSocket("ws://legotournament.onrender.com/")
         const btnCreate = document.getElementById("btnCreate");
         const btnJoin = document.getElementById("btnJoin");
         const btnStart = document.getElementById("btnStart");
