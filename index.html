@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+</head>
+<body>
+    <h1>Lego Tournament</h1>
+
+    <button id = 'btnAdminLogin' class="btn btn-primary">Admin Login</button>
+    <button id = 'btnCreate' class="btn btn-primary" hidden>New Game</button>
+    <button id = 'btnJoin' class="btn btn-success">Join Game</button>
+    <input type = 'text' id = 'txtGameId' class="form-control">
+    <div id  = 'divPlayers'></div>
+    <div id  = 'divBoard'></div>
+    <div id  = 'divGameId'></div>
+    <table id = 'leaderBoardTable'>
+        <tr>
+            <th>Position</th>
+            <th>Group</th>
+        </tr>
+    </table>
+    <script type="text/javascript">
+        document.getElementById("btnAdminLogin").onclick = function () {
+            location.href = "/admin";
+        };
+    </script>
+    <script>
+        //HTML elements
+        let clientId = null;
+        let gameId = null;
+        let playerColor = null;
+        let ws = new WebSocket("ws://localhost:9090")
+        const btnCreate = document.getElementById("btnCreate");
+        const btnJoin = document.getElementById("btnJoin");
+        const txtGameId = document.getElementById("txtGameId");
+        const divPlayers = document.getElementById("divPlayers");
+        const divGameId = document.getElementById("divGameId");
+    
+        //wiring events
+        btnJoin.addEventListener("click", e => {
+
+            if (gameId === null)
+                gameId = txtGameId.value;
+            
+            const payLoad = {
+                "method": "join",
+                "clientId": clientId,
+                "gameId": gameId
+            }
+
+            ws.send(JSON.stringify(payLoad));
+
+        })
+
+        btnCreate.addEventListener("click", e => {
+
+            const payLoad = {
+                "method": "create",
+                "clientId": clientId
+            }
+
+            ws.send(JSON.stringify(payLoad));
+
+        })
+
+        ws.onmessage = message => {
+            //message.data
+            const response = JSON.parse(message.data);
+            //connect
+            if (response.method === "connect"){
+                clientId = response.clientId;
+                console.log("Client id Set successfully " + clientId)
+            }
+
+            //create
+            if (response.method === "create"){
+                const gameId = document.createTextNode("Game ID: " + response.game.id);
+                divGameId.style.width = "200px";
+                divGameId.appendChild(gameId);
+                console.log("game successfully created with id " + response.game.id + " with " + response.game.balls + " balls")  
+            }
+
+
+            //update
+            if (response.method === "update"){
+                //{1: "red", 1}
+                if (!response.game.state) return;
+                for(const b of Object.keys(response.game.state))
+                {
+                    const color = response.game.state[b];
+                    const ballObject = document.getElementById(b);
+                    ballObject.style.backgroundColor = color
+                    console.log("Game object: " + response.game.leaderBoard)
+                }
+                if (response.answerFlag === "True"){
+                    document.getElementById("leaderBoardTable").innerHTML = "<table id = 'leaderBoardTable" + response.game.id + "'><tr><th>Position</th><th>Team</th></tr></table>";
+                    
+                    for(let i=0; i < response.game.leaderBoard.length; i++) {
+                        var table = document.getElementById("leaderBoardTable");
+                        var row = table.insertRow(i+1);
+                        var cell1 = row.insertCell(0);
+                        var cell2 = row.insertCell(1);
+                        cell1.innerHTML = i+1;
+                        cell2.innerHTML = response.game.leaderBoard[i]; 
+                    }
+                }
+                
+
+            }
+            
+            //join
+            if (response.method === "join"){
+                const game = response.game;
+                // Increments everytime client joins (May Not need it)
+                // const gameClients = 0;
+                while(divPlayers.firstChild)
+                    divPlayers.removeChild (divPlayers.firstChild)
+                //Added below
+                while(divBoard.firstChild)
+                    divBoard.removeChild (divBoard.firstChild)
+                game.clients.forEach (c => {
+                    // gameClients++
+                    const d = document.createElement("div");
+                    d.style.width = "200px";
+                    d.style.background = c.color
+                    d.textContent = c.clientId;
+                    divPlayers.appendChild(d);
+                        //Set player color
+                    if (c.clientId === clientId) playerColor = c.color;
+                    
+                    const b = document.createElement("button");
+                    b.id = c.clientId;
+                    b.tag = c.clientId
+                    b.textContent = "Player ID Button: " + c.clientId;
+                    b.style.width = "150px"
+                    b.style.height = "150px"
+                    
+                    // Hides the buttons escept for the ones that match user ID
+                    if(b.id != clientId){
+                            b.hidden = true
+                        }
+                    // divBoard.appendChild(b);
+                    b.addEventListener("click", e => {
+                        b.style.background = playerColor
+                        const payLoad = {
+                            "method": "play",
+                            "clientId": clientId,
+                            "gameId": gameId,
+                            "buttonId": b.id,
+                            "color": playerColor
+                        }
+                        console.log("Player ID: " + clientId)
+                        console.log("Player Color: " + playerColor)
+                        ws.send(JSON.stringify(payLoad))
+                    })
+                    divBoard.appendChild(b);
+                })
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+</body>
+</html>
