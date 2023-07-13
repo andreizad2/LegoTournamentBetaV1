@@ -33,24 +33,8 @@
         let clientId = null;
         let gameId = null;
         let playerColor = null;
-        // let ws = new WebSocket("wss://localhost:9090");
-        var ws = new WebSocket('wss://legotournament.onrender.com');
-        ws.onopen = function(e) {
-            console.log("Connection established!");
-        };
-        setInterval(() => {
-            ws.send('Hello server!');
-        }, 1000);
-        ws.onmessage = function(e) {
-            console.log(e.data);
-        };
-        ws.onclose = function(e) {
-            console.log(e.code);
-            console.log(e.reason);
-        };              
-        ws.onerror = function(e) {
-            console.log(e);
-        };
+        // let ws = new WebSocket("ws://localhost:9090")
+        let ws = new WebSocket("wss://legotournament.onrender.com/")
         const btnCreate = document.getElementById("btnCreate");
         const btnJoin = document.getElementById("btnJoin");
         const txtGameId = document.getElementById("txtGameId");

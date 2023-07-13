@@ -1,7 +1,10 @@
 const http = require("http");
 const app = require("express")();
+// const WebSocket = require("ws")();
+
 app.get("/", (req,res)=> res.sendFile(__dirname + "/index.html"))
-app.get("/admin", (req,res)=> res.sendFile(__dirname + "/admin.html"))
+
+const PORT = process.env.PORT || 9091;
 
 app.listen(9091, ()=>console.log("Listening on http port 9091"))
 const websocketServer = require("websocket").server
@@ -29,8 +32,7 @@ wsServer.on("request", request => {
             const gameId = guid();
             games[gameId] = {
                 "id": gameId,
-                // "balls": 20,
-                "startGame": false,
+                "balls": 20,
                 "clients": [],
                 "leaderBoard": []
             }
@@ -50,22 +52,18 @@ wsServer.on("request", request => {
             const clientId = result.clientId;
             const gameId = result.gameId;
             const game = games[gameId];
-            //Start Game flag is enabled.
-            console.log("I got here 1")
-            if (game.startGame || game.clients.length === 12) 
+            if (game.clients.length >= 3) 
             {
                 //sorry max players reach
-                console.log("Sorry, maximum players of: " + game.clients.length + " has been reached.")
                 return;
             }
-            console.log("I got here 2")
-            const color =  {"0": "Red", "1": "Green", "2": "Blue","3": "Yellow", "4": "Purple", "5": "Lime","6": "Aqua", "7": "Gray", "8": "Cyan","9": "Steel Blue", "10": "Magenta", "11": "Pink"}[game.clients.length]
+            const color =  {"0": "Red", "1": "Green", "2": "Blue"}[game.clients.length]
             game.clients.push({
                 "clientId": clientId,
                 "color": color
             })
             //start the game
-            console.log("Game Start Status: " + game.startGame)
+            if (game.clients.length === 3) updateGameState();
 
             const payLoad = {
                 "method": "join",
@@ -83,29 +81,16 @@ wsServer.on("request", request => {
             const buttonId = result.buttonId;
             const color = result.color;
             let state = games[gameId].state;
-            console.log("I got right before state")
+            
             if (!state)
                 state = {}
             state[buttonId] = color;
             games[gameId].state = state;
-            console.log("I got right before leaderboard")
+
             if (!game.leaderBoard.includes(buttonId))
                 game.leaderBoard.push(buttonId)
                 answerFlag = "True"
-                console.log("Leaderboard Length: " + game.leaderBoard.length)
             
-        }
-        if (result.method === "start") {
-            const gameId = result.gameId;
-            const game = games[gameId];
-            let start = games[gameId].startGame;
-            
-            if (!start)
-                start = {}
-            start = true;
-            console.log("Game has been started " + start);
-            updateGameState(); //Start game may be the culprit here
-            return;
         }
 
     })
