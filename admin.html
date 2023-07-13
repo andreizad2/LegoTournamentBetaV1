@@ -25,48 +25,31 @@
             <th>Group</th>
         </tr>
     </table>
-    <!-- <script type="text/javascript">
+    <script type="text/javascript">
         document.getElementById("btnAdminLogin").onclick = function () {
             location.href = "/admin";
         };
-    </script> -->
+    </script>
     <script>
         //HTML elements
         let clientId = null;
         let gameId = null;
         let playerColor = null;
-        // let ws = new WebSocket("ws://localhost:9090");
-        // let ws = new WebSocket("wss://legotournament.onrender.com/")
-        var ws = new WebSocket('ws://legotournament.onrender.com:9090');
-        ws.onopen = function(e) {
-            console.log("Connection established!");
-        };
-        setInterval(() => {
-            ws.send('Hello server!');
-        }, 1000);
-        ws.onmessage = function(e) {
-            console.log(e.data);
-        };
-        ws.onclose = function(e) {
-            console.log(e.code);
-            console.log(e.reason);
-        };              
-        ws.onerror = function(e) {
-            console.log(e);
-        };      
+        // let ws = new WebSocket("ws://localhost:9090")
+        let ws = new WebSocket("ws://legotournament.onrender.com/:9090")
         const btnCreate = document.getElementById("btnCreate");
         const btnJoin = document.getElementById("btnJoin");
         const btnStart = document.getElementById("btnStart");
         const txtGameId = document.getElementById("txtGameId");
         const divPlayers = document.getElementById("divPlayers");
         const divGameId = document.getElementById("divGameId");
-    
+
         //wiring events
         btnJoin.addEventListener("click", e => {
 
             if (gameId === null)
                 gameId = txtGameId.value;
-            
+
             const payLoad = {
                 "method": "join",
                 "clientId": clientId,
@@ -133,7 +116,7 @@
                 }
                 if (response.answerFlag === "True"){
                     document.getElementById("leaderBoardTable").innerHTML = "<table id = 'leaderBoardTable" + response.game.id + "'><tr><th>Position</th><th>Team</th></tr></table>";
-                    
+
                     for(let i=0; i < response.game.leaderBoard.length; i++) {
                         var table = document.getElementById("leaderBoardTable");
                         var row = table.insertRow(i+1);
@@ -143,10 +126,10 @@
                         cell2.innerHTML = response.game.leaderBoard[i]; 
                     }
                 }
-                
+
 
             }
-            
+
             //join
             if (response.method === "join"){
                 const game = response.game;
@@ -166,14 +149,14 @@
                     divPlayers.appendChild(d);
                         //Set player color
                     if (c.clientId === clientId) playerColor = c.color;
-                    
+
                     const b = document.createElement("button");
                     b.id = c.clientId;
                     b.tag = c.clientId
                     b.textContent = "Player ID Button: " + c.clientId;
                     b.style.width = "150px"
                     b.style.height = "150px"
-                    
+
                     // Hides the buttons escept for the ones that match user ID
                     if(b.id != clientId){
                             b.hidden = true

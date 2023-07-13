@@ -1,10 +1,7 @@
 const http = require("http");
 const app = require("express")();
-// const WebSocket = require("ws")();
-
 app.get("/", (req,res)=> res.sendFile(__dirname + "/index.html"))
-
-const PORT = process.env.PORT || 9091;
+app.get("/admin", (req,res)=> res.sendFile(__dirname + "/admin.html"))
 
 app.listen(9091, ()=>console.log("Listening on http port 9091"))
 const websocketServer = require("websocket").server
@@ -32,7 +29,8 @@ wsServer.on("request", request => {
             const gameId = guid();
             games[gameId] = {
                 "id": gameId,
-                "balls": 20,
+                // "balls": 20,
+                "startGame": false,
                 "clients": [],
                 "leaderBoard": []
             }
@@ -52,18 +50,22 @@ wsServer.on("request", request => {
             const clientId = result.clientId;
             const gameId = result.gameId;
             const game = games[gameId];
-            if (game.clients.length >= 3) 
+            //Start Game flag is enabled.
+            console.log("I got here 1")
+            if (game.startGame || game.clients.length === 12) 
             {
                 //sorry max players reach
+                console.log("Sorry, maximum players of: " + game.clients.length + " has been reached.")
                 return;
             }
-            const color =  {"0": "Red", "1": "Green", "2": "Blue"}[game.clients.length]
+            console.log("I got here 2")
+            const color =  {"0": "Red", "1": "Green", "2": "Blue","3": "Yellow", "4": "Purple", "5": "Lime","6": "Aqua", "7": "Gray", "8": "Cyan","9": "Steel Blue", "10": "Magenta", "11": "Pink"}[game.clients.length]
             game.clients.push({
                 "clientId": clientId,
                 "color": color
             })
             //start the game
-            if (game.clients.length === 3) updateGameState();
+            console.log("Game Start Status: " + game.startGame)
 
             const payLoad = {
                 "method": "join",
@@ -81,16 +83,29 @@ wsServer.on("request", request => {
             const buttonId = result.buttonId;
             const color = result.color;
             let state = games[gameId].state;
-            
+            console.log("I got right before state")
             if (!state)
                 state = {}
             state[buttonId] = color;
             games[gameId].state = state;
-
+            console.log("I got right before leaderboard")
             if (!game.leaderBoard.includes(buttonId))
                 game.leaderBoard.push(buttonId)
                 answerFlag = "True"
-            
+                console.log("Leaderboard Length: " + game.leaderBoard.length)
+
+        }
+        if (result.method === "start") {
+            const gameId = result.gameId;
+            const game = games[gameId];
+            let start = games[gameId].startGame;
+
+            if (!start)
+                start = {}
+            start = true;
+            console.log("Game has been started " + start);
+            updateGameState(); //Start game may be the culprit here
+            return;
         }
 
     })
@@ -136,7 +151,7 @@ function updateGameState(){
 // function S4() {
 //     return (((1+Math.random())*0x10000)|0).toString(16).substring(1); 
 // }
- 
+
 // // then to call it, plus stitch in '4' in the third group
 // const guid = () => (S4() + S4() + "-" + S4() + "-4" + S4().substr(0,3) + "-" + S4() + "-" + S4() + S4() + S4()).toLowerCase();
 //Created random 6 digit numerical ID for game.
@@ -147,5 +162,3 @@ function generateRandomNumber() {
     .random() * (maxm - minm + 1)) + minm;
 }
 const guid = () => generateRandomNumber();
-
-
