@@ -34,7 +34,7 @@
         let gameId = null;
         let playerColor = null;
         // let ws = new WebSocket("ws://localhost:9090")
-        let ws = new WebSocket("wss://legotournament.onrender.com/")
+        var ws = new WebSocket('ws://legotournament.onrender.com:9090');
         const btnCreate = document.getElementById("btnCreate");
         const btnJoin = document.getElementById("btnJoin");
         const txtGameId = document.getElementById("txtGameId");
